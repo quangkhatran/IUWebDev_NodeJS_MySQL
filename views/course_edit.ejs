@@ -1,0 +1,11 @@
+<%- include('partials/header') %>
+
+<!-- <form action="/courses/<%= course._id %>" method="put"> -->
+<form action="/courses/<%= course._id %>?_method=PUT" method="post">
+	<input type="text" name="title" value="<%= course.title %>">
+	<input type="text" name="description" value="<%= course.description %>"><br>
+	<button type="button" onclick="window.location.href='/courses'">View all courses</button>	
+	<input type="submit" name="submit" value="submit">
+</form> 
+
+<%- include('partials/footer') %>
