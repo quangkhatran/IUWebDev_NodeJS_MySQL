@@ -2,3 +2,8 @@ h1 {
 	background-color: gold; 
 	font: 30px Arial, sans-serif;  
 }
+
+.img-container {
+	text-align: center;
+	display: block;
+}

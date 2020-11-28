@@ -231,8 +231,7 @@ app.post('/register', function(req, res){
 	var password = req.body.password;
 	User.register(new User({username: username}), password, function(err, user){
 		if(err){
-			console.log(err);
-			return res.render("register");
+			return res.render("register.ejs");
 		}
 		passport.authenticate("local")( req, res, function(){
 			res.redirect("/private");

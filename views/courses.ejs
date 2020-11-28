@@ -1,22 +1,26 @@
 <%- include('partials/header') %>
 
-<h1>Courses</h1>
-<% courses.forEach( function(course){ %>
-	<h2><%= course.title %></h2>
-	<h3><%= course.description %></h3>	
-	<a href="/courses/<%= course._id %>">More Information</a>	
-	<a href="/courses/<%= course._id %>/edit">Edit</a>
-	<a href="/courses/<%= course._id %>/delete">Delete</a>
-	<hr>
-<% }); %>
+<div class="container">
+	<h1>Courses</h1>
+	<% courses.forEach( function(course){ %>
+		<h2><%= course.title %></h2>
+		<h3><%= course.description %></h3>	
+		<a href="/courses/<%= course._id %>">More Information</a>	
+		<a href="/courses/<%= course._id %>/edit">Edit</a>
+		<a href="/courses/<%= course._id %>/delete">Delete</a>
+		<hr>
+	<% }); %>
 
 
-<!-- <form action="/addcourse" method="post">
-	<input type="text" name="title" placeholder="course name">
-	<input type="text" name="description" placeholder="course description">
-	<input type="submit" name="submit" value="submit">
-</form>  -->
+	<!-- <form action="/addcourse" method="post">
+		<input type="text" name="title" placeholder="course name">
+		<input type="text" name="description" placeholder="course description">
+		<input type="submit" name="submit" value="submit">
+	</form>  -->
 
-<a href="courses/new">Add a new course</a>
+	<form action="courses/new" method="get">
+		<input type="submit" name="submit" value="Add a new course" class="btn btn-primary">
+	</form>
+</div>
 
 <%- include('partials/footer') %>
