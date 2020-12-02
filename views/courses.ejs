@@ -5,9 +5,9 @@
 	<% courses.forEach( function(course){ %>
 		<h2><%= course.title %></h2>
 		<h3><%= course.description %></h3>	
-		<a href="/courses/<%= course._id %>">More Information</a>	
-		<a href="/courses/<%= course._id %>/edit">Edit</a>
-		<a href="/courses/<%= course._id %>/delete">Delete</a>
+        <a href="/courses/<%= course.id %>">More Information</a>	
+		<a href="/courses/<%= course.id %>/edit">Edit</a>
+		<a href="/courses/<%= course.id %>/delete">Delete</a>
 		<hr>
 	<% }); %>
 

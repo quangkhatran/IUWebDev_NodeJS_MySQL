@@ -2,7 +2,7 @@
 
 <div class="container">
 	<h1>Edit a course</h1>
-	<form action="/courses/<%= course._id %>?_method=PUT" method="post">
+	<form action="/courses/<%= course.id %>?_method=PUT" method="post">
 		<input type="text" name="title" value="<%= course.title %>">
 		<input type="text" name="description" value="<%= course.description %>"><br>
 		<br>

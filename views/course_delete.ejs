@@ -1,7 +1,7 @@
 <%- include('partials/header') %>
 <div class="container">
 	<h1>Delete a course</h1>
-	<form action="/courses/<%= course._id %>?_method=DELETE" method="post">
+	<form action="/courses/<%= course.id %>?_method=DELETE" method="post">
 		<input type="text" name="title" value="<%= course.title %>">
 		<input type="text" name="description" value="<%= course.description %>" >			
 		<br>

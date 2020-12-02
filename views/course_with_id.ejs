@@ -5,8 +5,8 @@
 	<h2>Name: <%= course.title %></h2>
 	<h2>Description: <%= course.description %></h2>
 	<br>
-	<button onclick="window.location.href='/courses/<%= course._id %>/edit'" class="btn btn-primary">Edit</button>
-	<button onclick="window.location.href='/courses/<%= course._id %>/delete'" class="btn btn-primary">Delete</button>
+	<button onclick="window.location.href='/courses/<%= course.id %>/edit'" class="btn btn-primary">Edit</button>
+	<button onclick="window.location.href='/courses/<%= course.id %>/delete'" class="btn btn-primary">Delete</button>
 	<button type="button" onclick="window.location.href='/courses'" class="btn btn-primary">View all courses</button>
 </div>
 
