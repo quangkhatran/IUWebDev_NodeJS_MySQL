@@ -14,6 +14,8 @@ app.use(express.json());
 
 var { promisify } = require("util");
 
+var axios = require('axios');
+
 var methodOverride = require("method-override");
 
 app.use('/css', express.static('css'));
@@ -203,6 +205,25 @@ async function isLoggedIn(req, res, next){
         return next();
     }
 }
+
+// route to get the precious metal rates and currency exchange rates
+app.get('/prices', isLoggedIn, function(req,res){
+	var config = { params: { base: "USD", symbols: "XAU,XAG" } }; 
+	axios.get('https://metals-api.com/api/latest?access_key=sxsr0hf49dmx757lffn6nik5v50suq4dw51xzqfu0ew3w4mg332843v3a1eq', config)
+  	.then(function (response) {
+    	// handle success
+    	// console.log(response);
+		var goldPrice = 1/response.data.rates.XAU;
+		var silverPrice = 1/response.data.rates.XAG;
+		
+		res.render("prices.ejs", {goldPrice: goldPrice, silverPrice: silverPrice, currentUser: req.user });
+  	})
+  	.catch(function (error) {
+    	// handle error
+    	console.log(error);
+  	});
+  	
+})
 
 app.get('/private', isLoggedIn, function(req, res){
     if( req.user ){
