@@ -4,6 +4,16 @@ var bodyParser = require("body-parser");
 
 var mysql = require("mysql");
 
+var jwt = require("jsonwebtoken");
+var bcrypt = require("bcryptjs");
+
+var cookieParser = require("cookie-parser");
+app.use(cookieParser());
+
+app.use(express.json());
+
+var { promisify } = require("util");
+
 var methodOverride = require("method-override");
 
 app.use('/css', express.static('css'));
@@ -76,27 +86,28 @@ app.get('/',function(req,res){
 	res.redirect("/aboutme");
 });
 
-app.get('/aboutme',function(req,res){
-	res.render("aboutme.ejs");
+app.get('/aboutme', isLoggedIn, function(req,res){
+	res.render("aboutme.ejs", {currentUser: req.user});
 });
 
-app.get('/hi/:name',function(req,res){
+app.get('/hi/:name', isLoggedIn, function(req,res){
 	var name = req.params.name;
-	res.render("hi.ejs", {name: name});
+	res.render("hi.ejs", {name: name, currentUser: req.user});
 });
 
 
-app.get('/courses',function(req,res){
+app.get('/courses', isLoggedIn, function(req,res){
+    
     var sql = "SELECT * FROM course";
     con.query(sql, function (err, courses) {
         if (err) throw err;
-        console.log(courses);
-        res.render("courses.ejs", {courses: courses});
+        // console.log(courses);
+        res.render("courses.ejs", {courses: courses, currentUser: req.user});
     });
 });
 
-app.get('/courses/new', function(req,res){
-	res.render("courses_new.ejs");
+app.get('/courses/new', isLoggedIn, function(req,res){
+	res.render("courses_new.ejs", {currentUser: req.user});
 })
 
 app.post('/courses',function(req,res){
@@ -111,25 +122,25 @@ app.post('/courses',function(req,res){
     });
 });
 
-app.get('/courses/:id', function(req,res){
+app.get('/courses/:id', isLoggedIn, function(req,res){
 	var courseID = req.params.id;
 	var sql = "SELECT * FROM course WHERE id = " + courseID;
     console.log(sql);
     con.query(sql, function (err, courseFound) {
         if (err) throw err;
         console.log(courseFound[0]);  
-        res.render("course_with_id.ejs", {course: courseFound[0]});
+        res.render("course_with_id.ejs", {course: courseFound[0], currentUser: req.user});
     });
 })
 
-app.get('/courses/:id/edit', function(req,res){
+app.get('/courses/:id/edit', isLoggedIn, function(req,res){
 	var courseID = req.params.id;
     var sql = "SELECT * FROM course WHERE id = " + courseID;
     console.log(sql);
     con.query(sql, function (err, courseFound) {
         if (err) throw err;
         console.log(courseFound[0]);  
-        res.render("course_edit.ejs", {course: courseFound[0]});
+        res.render("course_edit.ejs", {course: courseFound[0], currentUser: req.user});
     });
 })
 
@@ -157,7 +168,7 @@ app.delete('/courses/:id', function(req,res){
     });
 })
 
-app.get('/courses/:id/delete', function(req,res){
+app.get('/courses/:id/delete', isLoggedIn, function(req,res){
 	var courseID = req.params.id;
     
 	var sql = "SELECT * FROM course WHERE id = " + courseID;
@@ -165,10 +176,110 @@ app.get('/courses/:id/delete', function(req,res){
     con.query(sql, function (err, courseFound) {
         if (err) throw err;
         console.log(courseFound[0]);  
-        res.render("course_delete.ejs", {course: courseFound[0]});
+        res.render("course_delete.ejs", {course: courseFound[0], currentUser: req.user});
     });
     
 })
+
+async function isLoggedIn(req, res, next){
+	console.log( req.cookies );
+    if( req.cookies.jwt ){
+        try {
+            var decoded = await promisify(jwt.verify)(req.cookies.jwt, 'secret_password_token');
+            console.log(decoded);
+            con.query("SELECT * FROM user WHERE id = ?", [decoded.id], function(err, results){
+                // console.log(results);
+                if(!results){
+                    return next();
+                }
+                req.user = results[0];
+                return next();
+            })
+        } catch (err) {
+            console.log(err);
+            return next();
+        }
+    } else {
+        return next();
+    }
+}
+
+app.get('/private', isLoggedIn, function(req, res){
+    if( req.user ){
+        res.render("private.ejs", {currentUser: req.user});
+    } else {
+        res.redirect("/login");
+    }
+	
+})
+
+// REGISTER ROUTES
+app.get('/register', isLoggedIn, function(req, res){
+	res.render("register.ejs", {currentUser: req.user});
+})
+
+app.post('/register', function(req, res){
+	var username = req.body.username;
+	var password = req.body.password;
+    var sql = "SELECT username FROM user WHERE username = ?"
+    con.query(sql, [username], async function(err, results){
+        if(err){
+            console.log(err);
+        } 
+        if(results.length > 0){
+            console.log("Email is already in use");
+        } 
+        let hashedPassword = await bcrypt.hash(password, 8);
+        console.log(hashedPassword);
+        var insertNewUserSql = "INSERT INTO user SET ?";
+        con.query( insertNewUserSql, {username: username, password: hashedPassword}, function(err, results){
+            if(err){
+                console.log(err);
+            } else {
+                console.log("Register Success!")
+                return res.redirect("/private");
+            }
+        })
+    })
+})
+
+// LOGIN ROUTES
+app.get('/login', isLoggedIn, function(req, res){
+	res.render("login.ejs", {currentUser: req.user});
+})
+
+app.post('/login', async function(req, res){
+    try{
+        var username = req.body.username;
+        var password = req.body.password;
+        if( !username || !password ){
+            res.status(400).render('login.ejs');
+        }
+        var sql = "SELECT * FROM user WHERE username = ?";
+        con.query(sql, [username], async function(err, results){
+            if( !results || !(await bcrypt.compare(password, results[0].password)) ){
+                res.status(401).redirect("/login");
+            } else {
+                var id = results[0].id;
+                var token = jwt.sign({id:id}, 'secret_password_token', {expiresIn: '90d'});
+                // console.log("Token: " + token);
+                var cookieOptions = {expires: new Date(Date.now()+ '90*24*60*60*1000'), httpOnly: true};
+                res.cookie('jwt', token, cookieOptions);
+                res.status(200).redirect("/private");
+            }
+        })
+    } catch(err){
+        console.log(err);
+    }
+}
+);
+
+// LOGOUT ROUTES
+app.get('/logout', async function(req, res){
+	var cookieOptions = {expires: new Date(Date.now()+'2*1000'), httpOnly: true};
+    res.cookie('jwt', 'logout', cookieOptions);
+    res.status(200).redirect("/");
+});
 
 app.listen(3000,function(){
 	console.log('Server started');
