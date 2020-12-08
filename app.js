@@ -246,21 +246,23 @@ app.post('/register', function(req, res){
     con.query(sql, [username], async function(err, results){
         if(err){
             console.log(err);
-        } 
-        if(results.length > 0){
+            return res.redirect("/register");
+        } else if(results.length > 0){
             console.log("Email is already in use");
-        } 
-        let hashedPassword = await bcrypt.hash(password, 8);
-        console.log(hashedPassword);
-        var insertNewUserSql = "INSERT INTO user SET ?";
-        con.query( insertNewUserSql, {username: username, password: hashedPassword}, function(err, results){
-            if(err){
-                console.log(err);
-            } else {
-                console.log("Register Success!")
-                return res.redirect("/private");
-            }
-        })
+            return res.redirect("/register");
+        } else {
+            let hashedPassword = await bcrypt.hash(password, 8);
+            console.log(hashedPassword);
+            var insertNewUserSql = "INSERT INTO user SET ?";
+            con.query( insertNewUserSql, {username: username, password: hashedPassword}, function(err, results){
+                if(err){
+                    console.log(err);
+                } else {
+                    console.log("Register Success!")
+                    return res.redirect("/private");
+                }
+            })
+        }
     })
 })
 
